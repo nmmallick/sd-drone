@@ -12,6 +12,13 @@ void BNO_055_init()
 }
 
 // Read gyro raw
+void read_gyro(IMU_TypeDef *imu_dtype)
+{
+    // HAL return typedef
+    HAL_StatusTypeDef ret;
+
+    uint8_t buf[2]; 
+}
 
 // Read accel raw
 

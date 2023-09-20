@@ -12,9 +12,8 @@ typedef struct IMU_TypeDef
 
     float dt;
 
-    I2C_HandleTypdef *i2d;
+    I2C_HandleTypdef *i2c;
 } IMU_TypeDef;
-
 
 #define OP_MODE_REG 0x3d
 typedef enum
@@ -34,9 +33,36 @@ typedef enum
     OP_MODE_NDOF = 0x0c
 } bno_op_mode;
 
+#define GYRO_REG_X_LSB 0x14
+#define GYRO_REG_X_MSB 0x15
+#define GYRO_REG_Y_LSB 0x16
+#define GYRO_REG_Y_MSB 0x17
+#define GYRO_REG_Z_LSB 0x18
+#define GYRO_REG_Z_MSB 0x19
+
+#define ACC_REG_X_LSB 0x08
+#define ACC_REG_X_MSB 0x09
+#define ACC_REG_Y_LSB 0x0a
+#define ACC_REG_Y_MSB 0x0b
+#define ACC_REG_Z_LSB 0x0c
+#define ACC_REG_Z_MSB 0x0d
+
+#define MAG_REG_X_LSB 0x0e
+#define MAG_REG_X_MSB 0x0f
+#define MAG_REG_Y_LSB 0x10
+#define MAG_REG_Y_MSB 0x11
+#define MAG_REG_Z_LSB 0x12
+#define MAG_REG_Z_MSB 0x13
+
 /**
  * @brief Initialize IMU
  */
 void BNO_055_init(bno_op_mode mode);
+
+void read_gyro(IMU_TypeDef *imu_dtype);
+
+void read_acc(IMU_TypeDef *imu_dtype);
+
+void read_mag(IMU_TypeDef *imu_dtype);
 
 #endif
