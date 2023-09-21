@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <BNO_055_Drivers.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -77,14 +78,12 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -92,13 +91,22 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  uint8_t msg[256] = {'\0'};
+  IMU_TypeDef imu_dtype;
+  imu_dtype.i2c = &hi2c1;
+  bno_055_init(&imu_dtype);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      read_imu(&imu_dtype);
+      sprintf(msg, "gyro: %f\t%f\t%f", imu_dtype.gyro_data[0],
+	      imu_dtype.gyro_data[1],
+	      imu_dtype.gyro_data[2]);
+
+      HAL_UART_Transmit(&huart2, msg, sizeof(msg), 100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

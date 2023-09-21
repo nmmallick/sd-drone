@@ -57,18 +57,27 @@ typedef enum
 
 #define BNO_055_I2C_ADDR 0x29
 
-#define LSB_TO_DPS 16
-#define LSB_TO_RPS 900
+// Conversion for gyroscope
+#define LSB_TO_DPS 16.0
+#define LSB_TO_RPS 900.0
+
+// Conversions for accelerometer
+#define LSB_TO_M_PER_S 100.0
+#define LSB_TO_G 1/1000.0
+
+// Conversions for magnometer
+#define LSB_TO_MICRO_T 16.0
 
 /**
  * @brief Initialize IMU
  */
-void bno_055_init(bno_op_mode mode);
+void bno_055_init(IMU_TypeDef *imu_dtype);
 
 void read_gyro(IMU_TypeDef *imu_dtype);
-
 void read_acc(IMU_TypeDef *imu_dtype);
-
 void read_mag(IMU_TypeDef *imu_dtype);
+
+void read_imu(IMU_TypeDef *imu_dtype);
+
 
 #endif
