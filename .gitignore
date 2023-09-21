@@ -1,5 +1,7 @@
 # build dir
 build*
+
 # emacs
 *#
+#*
 *~
