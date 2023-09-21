@@ -1,7 +1,7 @@
 #ifndef BNO_055_H
 #define BNO_055_H
 
-#include "stm32f4xlx_hal.h"
+#include "stm32f4xx_hal.h"
 #include <math.h>
 
 typedef struct IMU_TypeDef
@@ -12,7 +12,8 @@ typedef struct IMU_TypeDef
 
     float dt;
 
-    I2C_HandleTypdef *i2c;
+    I2C_HandleTypeDef *i2c;
+
 } IMU_TypeDef;
 
 #define OP_MODE_REG 0x3d
@@ -54,10 +55,15 @@ typedef enum
 #define MAG_REG_Z_LSB 0x12
 #define MAG_REG_Z_MSB 0x13
 
+#define BNO_055_I2C_ADDR 0x29
+
+#define LSB_TO_DPS 16
+#define LSB_TO_RPS 900
+
 /**
  * @brief Initialize IMU
  */
-void BNO_055_init(bno_op_mode mode);
+void bno_055_init(bno_op_mode mode);
 
 void read_gyro(IMU_TypeDef *imu_dtype);
 
