@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "BNO_055_Drivers.h"
+#include "ekf.h"
 
 /* USER CODE END Includes */
 
@@ -59,7 +60,7 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+char buf[256] = {"\0"};
 /* USER CODE END 0 */
 
 /**
@@ -92,16 +93,26 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
-  /* USER CODE BEGIN 2 */
 
-  init_filter(&hi2c1, huart1, 0.01);
+  /* USER CODE BEGIN 2 */
+  sprintf((char *)buf, "Hello World!\n\r");
+  HAL_UART_Transmit(&huart1, buf, strlen((char *)buf), HAL_MAX_DELAY);
+
+  FilterCtx_TypeDef ctx;
+  IMU_TypeDef imu;
+  imu.acc_data[0] = 0.0;
+  imu.i2c = &hi2c1;
+
+  ctx.imu = &imu;
+  ctx.huart = &huart1;
+  init_filter(&ctx);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      filter_runOnce();
+      filter_runOnce(&ctx);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -227,7 +238,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 /* USER CODE END 4 */
 
 /**
@@ -239,6 +249,8 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  sprintf((char *)buf, "big ole error\n\r");
+  HAL_UART_Transmit(&huart1, buf, strlen((char *)buf), HAL_MAX_DELAY);
   while (1)
   {
   }

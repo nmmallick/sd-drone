@@ -46,7 +46,7 @@ void read_acc(IMU_TypeDef *imu_dtype)
 
     // x-axis
     ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR, ACC_REG_X_LSB, I2C_MEMADD_SIZE_8BIT, buf, 2, HAL_MAX_DELAY);
-    if (ret == HAL_OK)
+    if (ret = HAL_OK)
 	imu_dtype->acc_data[0] = ((buf[1] << 8) | buf[0])*LSB_TO_M_PER_S;
 
     // y-axis

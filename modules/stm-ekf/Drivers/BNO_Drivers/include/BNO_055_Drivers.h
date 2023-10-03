@@ -1,5 +1,5 @@
- #ifndef BNO_055_H
-#define BNO_055_H
+#ifndef BNO_055_H_
+#define BNO_055_H_
 
 #include "stm32f1xx_hal.h"
 #include <math.h>

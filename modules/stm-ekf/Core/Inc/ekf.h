@@ -14,12 +14,10 @@ typedef struct FilterCtx_TypeDef
     // TODO: Add kalman filter context
 } FilterCtx_TypeDef;
 
-FilterCtx_TypeDef *__filter__;
-
 // Initialize
-void init_filter(FilterCtx_TypeDef *dtype);
+void init_filter(FilterCtx_TypeDef *);
 
 // Read IMU
-void filter_runOnce();
+void filter_runOnce(FilterCtx_TypeDef *);
 
 #endif
