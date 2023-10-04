@@ -93,15 +93,15 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
-
   /* USER CODE BEGIN 2 */
   sprintf((char *)buf, "Hello World!\n\r");
-  HAL_UART_Transmit(&huart1, buf, strlen((char *)buf), HAL_MAX_DELAY);
+  HAL_UART_Transmit(&huart1, buf, sizeof(buf), HAL_MAX_DELAY);
 
   FilterCtx_TypeDef ctx;
   IMU_TypeDef imu;
   imu.acc_data[0] = 0.0;
   imu.i2c = &hi2c1;
+  imu.huart = &huart1;
 
   ctx.imu = &imu;
   ctx.huart = &huart1;

@@ -6,11 +6,12 @@
 
 typedef struct IMU_TypeDef
 {
-    float acc_data[3];
-    float gyro_data[3];
-    float mag_data[3];
+    double acc_data[3];
+    double gyro_data[3];
+    double mag_data[3];
 
     I2C_HandleTypeDef *i2c;
+    UART_HandleTypeDef *huart;
 } IMU_TypeDef;
 
 #define OP_MODE_REG 0x3d
@@ -30,6 +31,15 @@ typedef enum
     OP_MODE_NDOF_FMC_OFF = 0x0b,
     OP_MODE_NDOF = 0x0c
 } bno_op_mode;
+
+#define PWR_MODE_REG 0x3e
+typedef enum
+{
+    PWR_MODE_NORM = 0x00,
+    PWR_MODE_LOW = 0x01,
+    PWR_MODE_SUS = 0x02,
+    PWR_MODE_INVALID = 0x03
+} bno_pwr_mode;
 
 #define GYRO_REG_X_LSB 0x14
 #define GYRO_REG_X_MSB 0x15
@@ -52,7 +62,9 @@ typedef enum
 #define MAG_REG_Z_LSB 0x12
 #define MAG_REG_Z_MSB 0x13
 
-#define BNO_055_I2C_ADDR 0x29
+#define BNO_055_I2C_ADDR 0x28
+#define BNO_055_CHIP_ID 0xa0
+#define BNO_055_CHIP_ID_ADDR 0x00
 
 // Conversion for gyroscope
 #define LSB_TO_DPS 16.0
@@ -76,4 +88,5 @@ void read_mag(IMU_TypeDef *imu_dtype);
 
 void read_imu(IMU_TypeDef *imu_dtype);
 
+float convert(uint8_t *, float);
 #endif
