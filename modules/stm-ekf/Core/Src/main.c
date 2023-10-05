@@ -105,6 +105,8 @@ int main(void)
 
   ctx.imu = &imu;
   ctx.huart = &huart1;
+  
+  bno_055_init(ctx->imu);
   init_filter(&ctx);
   /* USER CODE END 2 */
 
