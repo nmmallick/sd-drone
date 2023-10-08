@@ -4,7 +4,6 @@
 
 #include "BNO_055_Drivers.h"
 
-
 // IMU Initialization
 void bno_055_init(IMU_TypeDef *imu_dtype)
 {
@@ -41,7 +40,7 @@ void bno_055_init(IMU_TypeDef *imu_dtype)
     HAL_Delay(50);
 
     // Write operating mode configuration
-    buf[0] = OP_MODE_AMG;
+    buf[0] = OP_MODE_NDOF;
     ret = HAL_I2C_Mem_Write(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, OP_MODE_REG, I2C_MEMADD_SIZE_8BIT, buf, 1, HAL_MAX_DELAY);
     if (ret != HAL_OK)
     {
@@ -58,7 +57,7 @@ void bno_055_init(IMU_TypeDef *imu_dtype)
     }
     HAL_Delay(50);
 
-    if (opMode != OP_MODE_AMG)
+    if (opMode != OP_MODE_NDOF)
     {
 	sprintf((char *)debug, "operating mode does not match %d\n\r", opMode);
 	HAL_UART_Transmit(imu_dtype->huart, debug, sizeof(debug), HAL_MAX_DELAY);
@@ -70,6 +69,7 @@ void bno_055_init(IMU_TypeDef *imu_dtype)
 void read_gyro(IMU_TypeDef *imu_dtype)
 {
     HAL_StatusTypeDef ret;
+
     uint8_t buf[2];
 
     // x-axis
@@ -115,20 +115,13 @@ void read_acc(IMU_TypeDef *imu_dtype)
 void read_mag(IMU_TypeDef *imu_dtype)
 {
     HAL_StatusTypeDef ret;
+
     char buf[2];
 
     // x-axis
     ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, MAG_REG_X_LSB, I2C_MEMADD_SIZE_8BIT, buf, 2, HAL_MAX_DELAY);
     if (ret == HAL_OK)
-    {
-	char send[256] = {'\0'};
-	int32_t data = (buf[1] << 8) | buf[2];
-
-	sprintf((char*)send, "%d\n\r", data);
-
-        HAL_UART_Transmit(imu_dtype->huart, send, sizeof(send), HAL_MAX_DELAY);
 	imu_dtype->mag_data[0] = convert(&buf, LSB_TO_MICRO_T);
-    }
 
     // y-axis
     ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, MAG_REG_Y_LSB, I2C_MEMADD_SIZE_8BIT, buf, 2, HAL_MAX_DELAY);
@@ -141,11 +134,35 @@ void read_mag(IMU_TypeDef *imu_dtype)
 	imu_dtype->mag_data[2] = convert(&buf, LSB_TO_MICRO_T);
 }
 
+void read_quat(IMU_TypeDef *imu_dtype)
+{
+    HAL_StatusTypeDef ret;
+
+    uint8_t buf[2];
+
+    ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, QUAT_REG_W_LSB, I2C_MEMADD_SIZE_8BIT, buf, 2, HAL_MAX_DELAY);
+    if (ret == HAL_OK)
+	imu_dtype->q[0] = convert(&buf, LSB_TO_QUAT);
+
+    ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, QUAT_REG_X_LSB, I2C_MEMADD_SIZE_8BIT, buf, 2, HAL_MAX_DELAY);
+    if (ret == HAL_OK)
+	imu_dtype->q[1] = convert(&buf, LSB_TO_QUAT);
+
+    ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, QUAT_REG_Y_LSB, I2C_MEMADD_SIZE_8BIT, buf, 2, HAL_MAX_DELAY);
+    if (ret == HAL_OK)
+	imu_dtype->q[2] = convert(&buf, LSB_TO_QUAT);
+
+    ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, QUAT_REG_Z_LSB, I2C_MEMADD_SIZE_8BIT, buf, 2, HAL_MAX_DELAY);
+    if (ret == HAL_OK)
+	imu_dtype->q[3] = convert(&buf, LSB_TO_QUAT);
+}
+
 void read_imu(IMU_TypeDef *imu_dtype)
 {
     read_gyro(imu_dtype);
     read_acc(imu_dtype);
     read_mag(imu_dtype);
+    read_quat(imu_dtype);
 }
 
 float convert(uint8_t *buf, float conv)

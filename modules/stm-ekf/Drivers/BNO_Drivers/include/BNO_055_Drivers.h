@@ -1,14 +1,19 @@
+
 #ifndef BNO_055_H_
 #define BNO_055_H_
 
 #include "stm32f1xx_hal.h"
 #include <math.h>
 
+typedef float f32;
+
 typedef struct IMU_TypeDef
 {
-    double acc_data[3];
-    double gyro_data[3];
-    double mag_data[3];
+    f32 acc_data[3];
+    f32 gyro_data[3];
+    f32 mag_data[3];
+
+    f32 q[4];
 
     I2C_HandleTypeDef *i2c;
     UART_HandleTypeDef *huart;
@@ -62,6 +67,15 @@ typedef enum
 #define MAG_REG_Z_LSB 0x12
 #define MAG_REG_Z_MSB 0x13
 
+#define QUAT_REG_W_LSB 0x20
+#define QUAT_REG_W_MSB 0x21
+#define QUAT_REG_X_LSB 0x22
+#define QUAT_REG_X_MSB 0x23
+#define QUAT_REG_Y_LSB 0x24
+#define QUAT_REG_Y_MSB 0x25
+#define QUAT_REG_Z_LSB 0x26
+#define QUAT_REG_Z_MSB 0x27
+
 #define BNO_055_I2C_ADDR 0x28
 #define BNO_055_CHIP_ID 0xa0
 #define BNO_055_CHIP_ID_ADDR 0x00
@@ -77,6 +91,9 @@ typedef enum
 // Conversions for magnometer
 #define LSB_TO_MICRO_T 16.0
 
+// Conversion for quaternions
+#define LSB_TO_QUAT 1.0/(1 << 14)
+
 /**
  * @brief Initialize IMU
  */
@@ -85,6 +102,7 @@ void bno_055_init(IMU_TypeDef *imu_dtype);
 void read_gyro(IMU_TypeDef *imu_dtype);
 void read_acc(IMU_TypeDef *imu_dtype);
 void read_mag(IMU_TypeDef *imu_dtype);
+void read_quat(IMU_TypeDef *imu_dtype);
 
 void read_imu(IMU_TypeDef *imu_dtype);
 
