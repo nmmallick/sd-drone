@@ -104,17 +104,25 @@ int main(void)
   imu.huart = &huart1;
 
   ctx.imu = &imu;
-  ctx.huart = &huart1;
-  
-  bno_055_init(ctx->imu);
+  ctx.uart = &huart1;
+
+  bno_055_init(ctx.imu);
+  sprintf((char *)buf, "debug: initializing filter\n\r");
+  HAL_UART_Transmit(&huart1, buf, sizeof(buf), HAL_MAX_DELAY);
+
   init_filter(&ctx);
+  /* sprintf((char *)buf, "debug: finished filter init\n\r"); */
+  /* HAL_UART_Transmit(&huart1, buf, sizeof(buf), HAL_MAX_DELAY); */
+
+  read_imu(&imu);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      filter_runOnce(&ctx);
+      filter_runOnce(&ctx, 0.01);
+      HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
