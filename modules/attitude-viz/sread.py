@@ -15,6 +15,8 @@ class DeviceInterface:
 
         self.__thread__ = None
 
+        self.angles = EulerAngles()
+
         self.buf = None
         self.quaternion = []
         self.done = False
@@ -27,6 +29,9 @@ class DeviceInterface:
                 start = self.__NUM_FLOATS__*i
                 end = start + self.__FLOAT_SIZE__
                 self.quaternion.append(struct.unpack('f', self.buf[start:end])[0])
+
+            self.angles.quaternion2euler(self.quaternion)
+            self.angles.printAngles()
 
     def getQuaternion(self):
         return self.quaternion
