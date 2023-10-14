@@ -1,3 +1,4 @@
+
 import struct
 import serial
 import threading
@@ -7,7 +8,8 @@ from qmath import EulerAngles
 class DeviceInterface:
     def __init__(self, port="/dev/ttyUSB0", baud=115200):
         __port__ = port
-        self.__dev__ = serial.Serial(__port__, baud)
+        self.__dev__ = serial.Serial(__port__, baud, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
+        self.__dev__.reset_input_buffer()
 
         self.__NUM_FLOATS__ = 4
         self.__FLOAT_SIZE__ = 4
@@ -44,7 +46,10 @@ class DeviceInterface:
         self.done = True
         self.__thread__.join()
 
-
-
-
-
+if __name__ == '__main__':
+    dev = DeviceInterface(port="/dev/ttyACM0")
+    try:
+        dev.start()
+    except:
+        dev.stop()
+        print("stopping")

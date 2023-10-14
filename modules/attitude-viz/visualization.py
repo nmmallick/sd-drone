@@ -18,7 +18,7 @@ def update_frame(step, n_frames, frame, dev):
 
 if __name__ == "__main__":
 
-    dev = DeviceInterface()
+    dev = DeviceInterface(port="/dev/ttyACM0")
     dev.start()
 
     n_frames = 50
@@ -41,4 +41,6 @@ if __name__ == "__main__":
         blit=False)
 
     plt.show()
+
+    print("closing device")
     dev.stop()
