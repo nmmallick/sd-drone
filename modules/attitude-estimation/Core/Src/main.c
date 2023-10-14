@@ -95,6 +95,9 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  sprintf((char*)buf, "hello world \n\r");
+  HAL_UART_Transmit(&huart2, buf, sizeof(buf), HAL_MAX_DELAY);
+
   FilterCtx_TypeDef ctx;
   IMU_TypeDef imu;
   imu.acc_data[0] = 0.0;
@@ -104,6 +107,7 @@ int main(void)
   ctx.imu = &imu;
   ctx.uart = &huart2;
 
+  HAL_Delay(50);
   bno_055_init(ctx.imu);
   init_filter(&ctx);
   read_imu(&imu);

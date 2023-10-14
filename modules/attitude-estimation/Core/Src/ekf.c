@@ -100,7 +100,15 @@ void filter_runOnce(FilterCtx_TypeDef *ctx, float dt)
     ctx->x.quat.q3 = ctx->imu->q[3];
 
     EulerAngles att = to_euler(ctx->x.quat);
-    HAL_UART_Transmit(huart, (uint8_t *)ctx->imu->q, sizeof(ctx->imu->q), HAL_MAX_DELAY);
+
+    /* sprintf((char *)debug, "%.4f %.4f %.4f %.4f\n\n\r", */
+    /* 	    ctx->x.quat.q0, ctx->x.quat.q1, ctx->x.quat.q2, ctx->x.quat.q3); */
+    /* HAL_UART_Transmit(huart, debug, sizeof(debug), HAL_MAX_DELAY); */
+
+    /* sprintf((char *)debug, "%.4f %.4f %.4f\n\n\r", */
+    /* 	    att.roll*(180.0/M_PI), att.pitch*(180.0/M_PI), att.yaw*(180.0/M_PI)); */
+    /* HAL_UART_Transmit(huart, debug, sizeof(debug), HAL_MAX_DELAY); */
+    HAL_UART_Transmit(huart, (uint8_t *)&ctx->x.quat, sizeof(ctx->x.quat), HAL_MAX_DELAY);
 }
 
 Prediction predict(FilterCtx_TypeDef *ctx, f32 dt)

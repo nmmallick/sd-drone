@@ -16,8 +16,9 @@ void bno_055_init(IMU_TypeDef *imu_dtype)
     uint8_t opMode;
 
     ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, BNO_055_CHIP_ID_ADDR, I2C_MEMADD_SIZE_8BIT, id, 1, HAL_MAX_DELAY);
-    if (ret != HAL_OK)
+    while (ret != HAL_OK)
     {
+	ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, BNO_055_CHIP_ID_ADDR, I2C_MEMADD_SIZE_8BIT, id, 1, HAL_MAX_DELAY);
 	sprintf((char *)debug, "i2c mem read returned with code %d\n\r", ret);
 	HAL_UART_Transmit(imu_dtype->huart, debug, sizeof(debug), HAL_MAX_DELAY);
     }
@@ -32,8 +33,9 @@ void bno_055_init(IMU_TypeDef *imu_dtype)
     // Write power mode
     buf[0] = PWR_MODE_NORM;
     ret = HAL_I2C_Mem_Write(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, PWR_MODE_REG, I2C_MEMADD_SIZE_8BIT, buf, 1, HAL_MAX_DELAY);
-    if (ret != HAL_OK)
+    while (ret != HAL_OK)
     {
+	ret = HAL_I2C_Mem_Write(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, PWR_MODE_REG, I2C_MEMADD_SIZE_8BIT, buf, 1, HAL_MAX_DELAY);
 	sprintf((char *)debug, "i2c mem write [power mode] returned with code %d\n\r");
 	HAL_UART_Transmit(imu_dtype->huart, debug, sizeof(debug), HAL_MAX_DELAY);
     }
@@ -42,8 +44,9 @@ void bno_055_init(IMU_TypeDef *imu_dtype)
     // Write operating mode configuration
     buf[0] = OP_MODE_NDOF;
     ret = HAL_I2C_Mem_Write(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, OP_MODE_REG, I2C_MEMADD_SIZE_8BIT, buf, 1, HAL_MAX_DELAY);
-    if (ret != HAL_OK)
+    while (ret != HAL_OK)
     {
+	ret = HAL_I2C_Mem_Write(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, OP_MODE_REG, I2C_MEMADD_SIZE_8BIT, buf, 1, HAL_MAX_DELAY);
 	sprintf((char *)debug, "i2c mem write [operating mode] returned with code %d\n\r", ret);
 	HAL_UART_Transmit(imu_dtype->huart, debug, sizeof(debug), HAL_MAX_DELAY);
     }
@@ -52,6 +55,7 @@ void bno_055_init(IMU_TypeDef *imu_dtype)
     ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, OP_MODE_REG, I2C_MEMADD_SIZE_8BIT, &opMode, 1, HAL_MAX_DELAY);
     if (ret != HAL_OK)
     {
+	ret = HAL_I2C_Mem_Read(imu_dtype->i2c, BNO_055_I2C_ADDR << 1, OP_MODE_REG, I2C_MEMADD_SIZE_8BIT, &opMode, 1, HAL_MAX_DELAY);
 	sprintf((char *)debug, "read operating mode reg returned with code %d\n\r", ret);
 	HAL_UART_Transmit(imu_dtype->huart, debug, sizeof(debug), HAL_MAX_DELAY);
     }
