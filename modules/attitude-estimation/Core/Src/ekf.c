@@ -92,6 +92,8 @@ void init_filter(FilterCtx_TypeDef *ctx)
 // Read IMU
 void filter_runOnce(FilterCtx_TypeDef *ctx, float dt)
 {
+    uint8_t buf[16] = {'\0'};
+
     read_imu(ctx->imu);
 
     ctx->x.quat.q0 = ctx->imu->q[0];
@@ -101,14 +103,15 @@ void filter_runOnce(FilterCtx_TypeDef *ctx, float dt)
 
     EulerAngles att = to_euler(ctx->x.quat);
 
-    /* sprintf((char *)debug, "%.4f %.4f %.4f %.4f\n\n\r", */
+    /* sprintf((char *)debug, "%f %f %f %f\n\n\r", */
     /* 	    ctx->x.quat.q0, ctx->x.quat.q1, ctx->x.quat.q2, ctx->x.quat.q3); */
-    /* HAL_UART_Transmit(huart, debug, sizeof(debug), HAL_MAX_DELAY); */
+
+    memcpy((void *)&buf, (void *)&(ctx->x.quat), 16);
 
     /* sprintf((char *)debug, "%.4f %.4f %.4f\n\n\r", */
     /* 	    att.roll*(180.0/M_PI), att.pitch*(180.0/M_PI), att.yaw*(180.0/M_PI)); */
     /* HAL_UART_Transmit(huart, debug, sizeof(debug), HAL_MAX_DELAY); */
-    HAL_UART_Transmit(huart, (uint8_t *)&ctx->x.quat, sizeof(ctx->x.quat), HAL_MAX_DELAY);
+    HAL_UART_Transmit(huart, &buf, sizeof(buf), HAL_MAX_DELAY);
 }
 
 Prediction predict(FilterCtx_TypeDef *ctx, f32 dt)
@@ -121,7 +124,6 @@ Prediction predict(FilterCtx_TypeDef *ctx, f32 dt)
     Quaternion *q = &x_prev->quat;
     IMU *imu = ctx->imu;
     f32 t_2 = dt/2.0;
-
     // (1k) //
     // Create A and Sq matrix
     f32 sq[4][3] = { { -(q->q1), -(q->q2), -(q->q3) },
