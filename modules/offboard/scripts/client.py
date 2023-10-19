@@ -5,7 +5,7 @@ import time
 
 from sread import DeviceInterface
 
-LOOP_PERIOD = 1/200.0
+LOOP_PERIOD = 1/1000.
 
 if __name__ == '__main__':
 

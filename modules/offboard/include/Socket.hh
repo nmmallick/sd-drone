@@ -1,38 +1,41 @@
-class Socket {
+#include <string>
+#include <memory>
 
+#include <sys/socket.h>
+
+#include <netinet/in.h>
+
+typedef struct Receipt
+{
+    std::string ip_addr;
+    uint8_t *data;
+    size_t bytes_received;
+} Receipt;
+
+class Socket {
     typedef uint8_t u8;
 public:
 
     Socket() = delete;
-    Socket(size_t buffLen);
+    Socket(uint16_t port, size_t bufflen);
 
-    u8 *buffer();
+    /**
+     * @brief Recieve <bufflen> number of bytes from a buffer
+     * @return Receipt struct with a pointer to the data, number of bytes
+     *          received and the ip address of the sender
+     */
+    Receipt recv();
+
 private:
-
+    // Socket descriptor
     int sockfd;
-    struct sockaddr_in servaddr, cliaddr;
-    std::unique_ptr<uint8_t[]> buffer;
 
+    // Server and client information
+    struct sockaddr_in servaddr, cliaddr;
+
+    // Data buffer
+    std::unique_ptr<Socket::u8[]> buffer;
+    size_t bufflen;
 };
 
 
-
-Socket::Socket(size_t buffLen)
-{
-    // Allocate memory for buffer
-    buffer = std::make_unique<Socket::u8[]>(new uint8_t[bufflen]());
-
-    memset(&servaddr, 0, sizeof(servaddr));
-    memset(&cliaddr, 0, sizeof(cliaddr));
-
-
-    // Filling server information
-    servaddr.sin_family = AF_INET; // IPv4
-    servaddr.sin_addr.s_addr = INADDR_ANY;
-    servaddr.sin_port = htons(PORT);
-
-    // Bind the socket with the server address
-    if ( bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 )
-	throw std::runtime_error("Socket(): could not open socket");
-
-}
