@@ -1,67 +1,181 @@
 #include <Socket.hh>
-#include <math.h>
+#include <Utillities.hh>
+
+#include <mavsdk/mavsdk.h>
+#include <mavsdk/plugins/action/action.h>
+#include <mavsdk/plugins/offboard/offboard.h>
+#include <mavsdk/plugins/telemetry/telemetry.h>
+
+#include <csignal>
+#include <chrono>
+#include <thread>
+#include <sstream>
 #include <cstring>
 #include <iostream>
+#include <math.h>
+#include <future>
 
 #define PORT 65432
 
-typedef float f32;
+bool done = false;
+using namespace mavsdk;
 
-typedef struct Quaternion
+void handler(int sig_num)
 {
-    f32 q0, q1, q2, q3;
-} Quaternion;
-
-typedef struct EulerAngles
-{
-    f32 roll, pitch, yaw;
-} EulerAngles;
-
-// Convert a quaternion to z-y-x euler angles (yaw, pitch, roll)
-EulerAngles to_euler(Quaternion q)
-{
-    EulerAngles angles;
-
-    // Roll
-    f32 sinr_cosp = 2*((q.q0*q.q1) + (q.q2*q.q3));
-    f32 cosr_cosp = 1 - 2*((q.q1*q.q1) + (q.q2*q.q2));
-
-    angles.roll = atan2(sinr_cosp, cosr_cosp);
-
-    // Pitch
-    f32 sinp = sqrt(1 + 2*(q.q0*q.q2 - q.q1*q.q3));
-    f32 cosp = sqrt(1 - 2*(q.q0*q.q2 - q.q1*q.q3));
-
-    angles.pitch = 2*atan2(sinp, cosp) - M_PI_2;
-
-    // yaw
-    f32 siny_cosp = 2*(q.q0*q.q3 + q.q1*q.q2);
-    f32 cosy_cosp = 1 - 2*(q.q2*q.q2 + q.q3*q.q3);
-
-    angles.yaw = atan2(siny_cosp, cosy_cosp);
-
-    return angles;
+    done = true;
 }
 
-// Driver code
-int main() {
+void offboard_routine(mavsdk::Offboard *offboard)
+{
+    std::cout << "Starting offboard control\n";
+    std::stringstream ss;
 
-    Socket sock(PORT, 16);
+    Socket::Socket sock(PORT, 16);
     Quaternion q;
 
-    while (1)
+    // Get reference yaw angle
+    std::cout << "Calibrating yaw reference angle" << std::endl;
+    bool avg_done = false;
+    double yaw_ref = 0;
+    size_t itr = 0;
+    while ((itr <= 1000) && !done)
+    {
+	const auto res = sock.recv();
+
+	const auto angles = to_euler(deserialize_buffer(res.data), true);
+	yaw_ref += angles.yaw;
+	itr++;
+    }
+    yaw_ref/=itr;
+
+    std::cout << "Yaw ref angle : " << yaw_ref << "\n";
+
+    // Hold position command (empty field)
+    Offboard::VelocityBodyYawspeed ctl{};
+    offboard->set_velocity_body(ctl);
+
+    // Start
+    Offboard::Result offboard_result = offboard->start();
+    if (offboard_result != Offboard::Result::Success)
+    {
+	ss << "Offboard start failed: " << offboard_result << "\n";
+	throw std::runtime_error(ss.str());
+    }
+    std::cout << "Offboard started\n";
+
+    while (!done)
     {
 	auto rec = sock.recv();
 
-	memcpy(&q.q0, &(rec.data[0]), 4);
-	memcpy(&q.q1, &(rec.data[4]), 4);
-	memcpy(&q.q2, &(rec.data[8]), 4);
-	memcpy(&q.q3, &(rec.data[12]), 4);
+	const auto q = deserialize_buffer(rec.data);
+	const auto angles = to_euler(q, true);
 
-	const auto angles = to_euler(q);
+	ctl.right_m_s = (angles.roll)*0.1;
+	ctl.forward_m_s = (angles.pitch)*0.1;
+	ctl.yawspeed_deg_s = (yaw_ref - angles.yaw)*0.4;
 
-	printf("roll: %.2f\tpitch: %.2f\tyaw: %.2f\n", angles.roll, angles.pitch, angles.yaw);
+	offboard->set_velocity_body(ctl);
     }
+
+    offboard_result = offboard->stop();
+    if (offboard_result != Offboard::Result::Success) {
+	ss << "Offboard stop failed: " << offboard_result << "\n";
+	throw std::runtime_error(ss.str());
+    }
+    std::cout << "Offboard stopped\n";
+}
+
+int main()
+{
+    using std::chrono::seconds;
+    using std::this_thread::sleep_for;
+
+    signal(SIGINT, handler);
+
+    // Connection to simulator
+    Mavsdk mavsdk;
+    ConnectionResult connection_result = mavsdk.add_any_connection("udp://:14540");
+
+    std::stringstream ss;
+    if (connection_result != ConnectionResult::Success)
+    {
+	ss << "Connection failed: " << connection_result << "\n";
+	throw std::runtime_error(ss.str());
+    }
+
+    auto system = mavsdk.first_autopilot(3.0);
+    if (!system)
+	throw std::runtime_error("Timed out waiting for system");
+
+    // Instantiate plugins
+    auto action = Action{system.value()};
+    auto offboard = Offboard{system.value()};
+    auto telemetry = Telemetry{system.value()};
+
+    while (!telemetry.health_all_ok())
+    {
+	std::cout << "Waiting for system to be ready\n";
+	sleep_for(seconds(1));
+    }
+    std::cout << "System is ready\n";
+
+    // Arm drone
+    const auto arm_result = action.arm();
+    if (arm_result != Action::Result::Success)
+    {
+	ss << "Arming failed: " << arm_result << "\n";
+	throw std::runtime_error(ss.str());
+    }
+
+    const auto takeoff_result = action.takeoff();
+    if (takeoff_result != Action::Result::Success)
+    {
+	ss << "Takeoff failed: " << takeoff_result << "\n";
+	throw std::runtime_error(ss.str());
+    }
+
+    // Wait for take off to be finished
+    auto in_air_promise = std::promise<void>{};
+    auto in_air_future = in_air_promise.get_future();
+    Telemetry::LandedStateHandle handle = telemetry.subscribe_landed_state(
+        [&telemetry, &in_air_promise, &handle](Telemetry::LandedState state) {
+            if (state == Telemetry::LandedState::InAir) {
+                std::cout << "Taking off has finished\n.";
+                telemetry.unsubscribe_landed_state(handle);
+                in_air_promise.set_value();
+            }
+        });
+    in_air_future.wait_for(seconds(10));
+    if (in_air_future.wait_for(seconds(3)) == std::future_status::timeout)
+        throw std::runtime_error("Takeoff timed out.");
+
+
+    /**** [OFFBOARD] ****/
+    //offboard_routine(&offboard);
+    const auto rc_status = telemetry.rc_status();
+    if (rc_status.is_available)
+	std::cout << "RC available\n";
+
+    offboard_routine(&offboard);
+
+    const auto land_result = action.land();
+    if (land_result != Action::Result::Success) {
+        std::cerr << "Landing failed: " << land_result << '\n';
+        return 1;
+    }
+
+    /**** [LAND] ****/
+    // Check if vehicle is still in air
+    while (telemetry.in_air()) {
+        std::cout << "Vehicle is landing...\n";
+        sleep_for(seconds(1));
+    }
+    std::cout << "Landed!\n";
+
+    // We are relying on auto-disarming but let's keep watching the telemetry for
+    // a bit longer.
+    sleep_for(seconds(3));
+    std::cout << "Finished...\n";
 
     return 0;
 }
