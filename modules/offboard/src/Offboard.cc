@@ -94,7 +94,7 @@ int main()
 
     // Connection to simulator
     Mavsdk mavsdk;
-    ConnectionResult connection_result = mavsdk.add_any_connection("udp://:14540");
+    ConnectionResult connection_result = mavsdk.add_any_connection("udp://192.168.0.4:14540");
 
     std::stringstream ss;
     if (connection_result != ConnectionResult::Success)
