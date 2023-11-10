@@ -1,2 +1,0 @@
-source "$BR2_EXTERNAL_SD_DRONE/external/package/mavsdk/Config.in"
-source "$BR2_EXTERNAL_SD_DRONE/modules/package/offboard/Config.in"

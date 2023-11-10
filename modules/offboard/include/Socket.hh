@@ -10,7 +10,6 @@
 
 namespace Socket
 {
-
     typedef struct Result
     {
 	std::string ip_addr;
