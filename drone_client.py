@@ -1,83 +1,74 @@
+
 import socket
-import bluetooth
 import threading
+import serial
 
-# Bluetooth server information
-server_name = "?"  
-service_uuid = "3A8688BC330C12D2D120DE040EF1B553"  
+address = '192.168.1.211'
+UDPport = 4242
+IDinfo = (address, UDPport)
+# UDP Client Connection
+udpguy = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# Bluetooth settings
-bluetooth_port = 1  # Bluetooth port number
-bluetooth_buff_size = 1024
 
-# TCP settings
-# home
-# tcp_host = '192.168.1.211'
-# hotspot 
-tcp_host = '172.20.10.13'
-tcp_port = 4242
-tcp_buff_size = 1024
+serPort = '/dev/ttyACM0'
+BAUD = 9600
 
-fail_cmds = ['ERROR', 'KILL', 'IT']
+def setupUDP():
+	udpguy.connect(IDinfo)
 
-def setupBluetoothSocket():
-    nearby_devices = bluetooth.discover_devices(lookup_names=True)
-    
-    server_address = None
-    for addr, name in nearby_devices:
-        if name == server_name:
-            server_address = addr
-            break
-    
-    if server_address is None:
-        print(f"Bluetooth server '{server_name}' not found.")
-        return None
 
-    s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-    s.connect((server_address, bluetooth_port))
-    return s
+def setupSerial():
+	ser = serial.Serial(serPort, BAUD, timeout=0)
+	return ser
 
-def setupTcpSocket():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((tcp_host, tcp_port))
-    return s
+def read_fwd_data(ser):
+	message = ""
 
-def bluetooth_thread():
-    bt_socket = setupBluetoothSocket()
-    if bt_socket is not None:
-        while True:
-            bt_data = bt_socket.recv(bluetooth_buff_size)
-            if not bt_data:
-                break
-                
-            print("receved from Arduino: ", bt_data.decode('utf-8'))
-            tcp_socket.send(bt_data)
+	while True:
+		try:
+			byte = ser.read(1).decode('utf-8', errors='replace')
+			if byte == '\n':
+				# End of message, process it
+				if message:
+					print(f"Arduino cmd = {message.strip()}")
+					udpguy.sendto(message.encode('utf-8'), IDinfo)
+				message = ""  
+				# Reset msg
+			else:
+				message += byte
+		except UnicodeDecodeError:
+			print("Unicode decode error, skipping invalid char.")
 
-def tcp_thread():
-    while True:
-        cmd = input("ENTER COMMAND: ")
-        if cmd in fail_cmds:
-            tcp_socket.send(cmd.encode())
-            break
-        elif cmd.startswith("TOGGLE_LED "):
-            tcp_socket.send(cmd.encode())
-        else:
-            print("Invalid command. Please use the format 'TOGGLE_LED R,G,B' to control the LED.")
+			
+			
+			
+def closeConnection(ser):
+	ser.close()
+	udpguy.close()
+	
+	
+def echo(data):
+	print(f"Echoing: {data}")
 
-        reply = tcp_socket.recv(tcp_buff_size)
-        print(reply.decode('utf-8'))
 
-# Create a TCP socket for communication with the server
-tcp_socket = setupTcpSocket()
+if __name__ == '__main__':
+		
+	setupUDP()
+	ser = setupSerial()
 
-if tcp_socket is not None:
-    # Start the Bluetooth thread to handle Bluetooth communication
-    bt_thread = threading.Thread(target=bluetooth_thread)
-    bt_thread.start()
+	data_thread = threading.Thread(target=read_fwd_data(ser))
+	data_thread.dameon = True
+	data_thread.start()
 
-    # Start the TCP thread to handle user input and TCP communication
-    tcp_thread()
+	try:
+		while True:
+			userInput = input("Enter msg ('exit' to quit): ")
+			if userInput.lower() == 'exit':
+				break
+			echo(userInput)
+	except KeyboardInterrup:
+		pass
+		
+	closeConnection(ser) 
 
-    # Close the Bluetooth socket when the TCP thread exits
-    bt_thread.join()
-    tcp_socket.close()
+
