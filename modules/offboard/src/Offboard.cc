@@ -85,7 +85,7 @@ void offboard_routine(mavsdk::Offboard *offboard)
     std::cout << "Offboard stopped\n";
 }
 
-int main()
+int old_main()
 {
     using std::chrono::seconds;
     using std::this_thread::sleep_for;
@@ -179,3 +179,4 @@ int main()
 
     return 0;
 }
+

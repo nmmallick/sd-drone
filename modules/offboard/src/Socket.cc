@@ -3,6 +3,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <errno.h>
+
 #include <cstring>
 #include <iostream>
 #include <chrono>
@@ -31,7 +33,7 @@ namespace Socket
 	    throw std::runtime_error("Socket(): could not open socket");
     }
 
-    Result Socket::recv()
+    Result Socket::recv(const size_t &timeout)
     {
 	Result res;
 	char str_addr[16] = {'\0'};
@@ -42,22 +44,40 @@ namespace Socket
 	socklen_t len = sizeof(cliaddr);
 
 	auto start = std::chrono::steady_clock::now();
-	auto end = std::chrono::steady_clock::now();
+	auto curr = std::chrono::steady_clock::now();
 
 	while ((res.bytes_received < bufflen))
 	{
-	    res.bytes_received = recvfrom(sockfd,
-					  (uint8_t *)(buffer.get() + res.bytes_received),
-					  (bufflen - res.bytes_received),
-					  MSG_DONTWAIT,
-					  (struct sockaddr *) &cliaddr,
-					  &len);
+	    auto num_bytes = ::recvfrom(sockfd,
+				      (uint8_t *)(buffer.get() + res.bytes_received),
+				      (bufflen - res.bytes_received),
+				      MSG_DONTWAIT,
+				      (struct sockaddr *) &cliaddr,
+				      &len);
 
+	    curr = std::chrono::steady_clock::now();
+	    auto ellapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(curr - start);
+
+	    if (ellapsed_time.count() > timeout)
+	    {
+		res.data = NULL;
+	    	return res;
+	    }
+
+	    if (num_bytes < 0)
+	    {
+		if (errno == EAGAIN)
+		    continue;
+
+		std::cout << strerror(errno) << std::endl;
+		break;
+	    }
+
+	    res.bytes_received += num_bytes;
 	}
 
 	inet_ntop(cliaddr.sin_family, &cliaddr.sin_addr, str_addr, sizeof(str_addr));
 	res.data = buffer.get();
-
 	return res;
     }
 } // namespace socket
