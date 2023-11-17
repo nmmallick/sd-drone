@@ -15,9 +15,8 @@ LEVER_PIN = 23
 
 ARM_LED = 5
 CONN_LED = 6
-#RED_LED_PIN = 24
-#GREEN_LED_PIN = 25
-#BLUE_LED_PIN = 4
+
+ARM_SWITCH = #TODO
 
 # update on change
 prev_button1_state = GPIO.HIGH
@@ -37,6 +36,8 @@ def setupGPIO():
 	GPIO.setup(ARM_LED, GPIO.OUT, initial=GPIO.LOW)
 	GPIO.setup(CONN_LED, GPIO.OUT, initial=GPIO.LOW)
 
+	GPIO.setup(ARM_SWITCH, GPIO.IN)
+
 def blink_leds():
 	print("Starting LED blink loop")
 	while True:
@@ -51,13 +52,25 @@ def blink_leds():
 def read_inputs():
 	
 	global prev_button1_state, prev_button2_state, prev_button3_state, prev_lever_state, prevPotVal
-	
+	global armed_state
+
+	prev_armed_state = GPIO.input(ARM_SWITCH)
 	while True:
 		
 		button1_state = GPIO.input(BUTTON1_PIN)
 		button2_state = GPIO.input(BUTTON2_PIN)
 		button3_state = GPIO.input(BUTTON3_PIN)
 
+		armed = GPIO.input(ARM_SWITCH)
+		if armed != prev_armed_state:
+			time.sleep(debounceDelay)
+			prev_armed_state = armed
+			
+			if armed == GPIO.HIGH:
+				print("ARMED")
+			else:
+				print("DISARMED")
+				
 		if button1_state != prev_button1_state:
 			time.sleep(debounceDelay)
 			prev_button1_state = button1_state
