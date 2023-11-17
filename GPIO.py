@@ -42,7 +42,7 @@ def setupGPIO():
 	# GPIO.setup(BLUE_LED_PIN, GPIO.OUT)
 	
 def blink_leds():
-
+	print("Starting LED blink loop")
 	while True:
 		GPIO.output(ARM_LED, GPIO.HIGH)
 		GPIO.output(CONN_LED, GPIO.HIGH)
@@ -112,13 +112,12 @@ if __name__ == '__main__':
 	input_thread.start()
 
 	led_thread = threading.Thread(target=blink_leds)
-	
+
 	try:
 		while True:
 			try:
 				input_response = input_queue.get(timeout=1)
 				print("Received Input: ", input_response)
-
 
 			except queue.Empty:
 				pass
