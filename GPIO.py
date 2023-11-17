@@ -28,6 +28,7 @@ prev_lever_state = GPIO.HIGH
 def setupGPIO():
 	# Setup GPIO
 	GPIO.setmode(GPIO.BCM)
+
 	GPIO.setup(BUTTON1_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.setup(BUTTON2_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.setup(BUTTON3_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -41,12 +42,10 @@ def blink_leds():
 	while True:
 		GPIO.output(ARM_LED, GPIO.HIGH)
 		GPIO.output(CONN_LED, GPIO.HIGH)
-
 		time.sleep(1)
 
-		GPIO.output(ARM_LED, GPIO.HIGH)
-		GPIO.output(CONN_LED, GPIO.HIGH)
-
+		GPIO.output(ARM_LED, GPIO.LOW)
+		GPIO.output(CONN_LED, GPIO.LOW)
 		time.sleep(1)
 
 def read_inputs():
@@ -58,34 +57,25 @@ def read_inputs():
 		button1_state = GPIO.input(BUTTON1_PIN)
 		button2_state = GPIO.input(BUTTON2_PIN)
 		button3_state = GPIO.input(BUTTON3_PIN)
-		lever_state = GPIO.input(LEVER_PIN)
 
 		if button1_state != prev_button1_state:
 			time.sleep(debounceDelay)
 			prev_button1_state = button1_state
 			if button1_state == GPIO.LOW:
-				input_queue.put("Button 1 is pressed")
+				input_queue.put("E-STOP pressed")
 
 		if button2_state != prev_button2_state:
 			time.sleep(debounceDelay)
 			prev_button2_state = button2_state
 			if button2_state == GPIO.LOW:
-				input_queue.put("Button 2 is pressed")
+				input_queue.put("CALIBRATE pressed")
 
 		if button3_state != prev_button3_state:
 			time.sleep(debounceDelay)
 			prev_button3_state = button3_state
 			if button3_state == GPIO.LOW:
-				input_queue.put("Button 3 is pressed")
+				input_queue.put("TAKEOFF pressed")
 
-		if lever_state != prev_lever_state:
-			prev_lever_state = lever_state
-			if lever_state == GPIO.LOW:
-				input_queue.put("Lever is ON")
-			if lever_state == GPIO.HIGH:
-				input_queue.put("Lever is OFF")
-	
-		
 		
 def update_rgb_led():
 		# todo
