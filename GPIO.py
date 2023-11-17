@@ -5,16 +5,16 @@ import queue
 
 # GLOBALS
 # I/Os
-BUTTON1_PIN = 11 # e-stop
-BUTTON2_PIN = 15 # calibrate
-BUTTON3_PIN = 13 # takeoff
+BUTTON1_PIN = 17 # e-stop
+BUTTON2_PIN = 22 # calibrate
+BUTTON3_PIN = 27 # takeoff
 
 debounceDelay = 0.02
 
 LEVER_PIN = 23
 
-ARM_LED = 29
-CONN_LED = 31
+ARM_LED = 5
+CONN_LED = 6
 #RED_LED_PIN = 24
 #GREEN_LED_PIN = 25
 #BLUE_LED_PIN = 4
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
 	led_thread = threading.Thread(target=blink_leds)
 	led_thread.start()
-	
+
 	try:
 		while True:
 			try:
