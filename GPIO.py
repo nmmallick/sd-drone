@@ -12,7 +12,6 @@ BUTTON3_PIN = 13 # takeoff
 debounceDelay = 0.02
 
 LEVER_PIN = 23
-POTENTIOMETER_PIN = 24
 
 ARM_LED = 29
 CONN_LED = 31
@@ -25,9 +24,6 @@ prev_button1_state = GPIO.HIGH
 prev_button2_state = GPIO.HIGH
 prev_button3_state = GPIO.HIGH
 prev_lever_state = GPIO.HIGH
-prevPotVal = -1
-
-potVal = 0.0
 
 def setupGPIO():
 	# Setup GPIO
@@ -63,8 +59,6 @@ def read_inputs():
 		button2_state = GPIO.input(BUTTON2_PIN)
 		button3_state = GPIO.input(BUTTON3_PIN)
 		lever_state = GPIO.input(LEVER_PIN)
-		potentiometer_value = GPIO.input(POTENTIOMETER_PIN)
-		
 
 		if button1_state != prev_button1_state:
 			time.sleep(debounceDelay)
@@ -90,12 +84,6 @@ def read_inputs():
 				input_queue.put("Lever is ON")
 			if lever_state == GPIO.HIGH:
 				input_queue.put("Lever is OFF")
-
-
-		if potVal != prevPotVal:
-			prevPotVal = potVal
-			input_queue.put(f"Pot Value: {potVal}") 
-	
 	
 		
 		
@@ -111,7 +99,8 @@ if __name__ == '__main__':
 	input_thread.start()
 
 	led_thread = threading.Thread(target=blink_leds)
-
+	led_thread.start()
+	
 	try:
 		while True:
 			try:
