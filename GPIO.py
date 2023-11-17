@@ -36,11 +36,10 @@ def setupGPIO():
 	GPIO.setup(BUTTON2_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.setup(BUTTON3_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.setup(LEVER_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.setup(POTENTIOMETER_PIN, GPIO.IN)
-	# GPIO.setup(RED_LED_PIN, GPIO.OUT)
-	# GPIO.setup(GREEN_LED_PIN, GPIO.OUT)
-	# GPIO.setup(BLUE_LED_PIN, GPIO.OUT)
 	
+	GPIO.setup(ARM_LED, GPIO.OUT, initial=GPIO.LOW)
+	GPIO.setup(CONN_LED, GPIO.OUT, initial=GPIO.LOW)
+
 def blink_leds():
 	print("Starting LED blink loop")
 	while True:
