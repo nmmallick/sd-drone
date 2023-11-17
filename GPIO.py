@@ -5,13 +5,17 @@ import queue
 
 # GLOBALS
 # I/Os
-BUTTON1_PIN = 17
-BUTTON2_PIN = 27
-BUTTON3_PIN = 22
+BUTTON1_PIN = 11 # e-stop
+BUTTON2_PIN = 15 # calibrate
+BUTTON3_PIN = 13 # takeoff
+
 debounceDelay = 0.02
 
 LEVER_PIN = 23
 POTENTIOMETER_PIN = 24
+
+ARM_LED = 29
+CONN_LED = 31
 #RED_LED_PIN = 24
 #GREEN_LED_PIN = 25
 #BLUE_LED_PIN = 4
@@ -37,6 +41,18 @@ def setupGPIO():
 	# GPIO.setup(GREEN_LED_PIN, GPIO.OUT)
 	# GPIO.setup(BLUE_LED_PIN, GPIO.OUT)
 	
+def blink_leds():
+
+	while True:
+		GPIO.output(ARM_LED, GPIO.HIGH)
+		GPIO.output(CONN_LED, GPIO.HIGH)
+
+		time.sleep(1)
+
+		GPIO.output(ARM_LED, GPIO.HIGH)
+		GPIO.output(CONN_LED, GPIO.HIGH)
+
+		time.sleep(1)
 
 def read_inputs():
 	
@@ -80,30 +96,34 @@ def read_inputs():
 		if potVal != prevPotVal:
 			prevPotVal = potVal
 			input_queue.put(f"Pot Value: {potVal}") 
+	
+	
 		
 		
 def update_rgb_led():
 		# todo
 		pass
-		
-input_queue = queue.Queue()
-setupGPIO()
-input_thread = threading.Thread(target=read_inputs)
-input_thread.start()
+
+if __name__ == '__main__':
+
+	input_queue = queue.Queue()
+	setupGPIO()
+	input_thread = threading.Thread(target=read_inputs)
+	input_thread.start()
+
+	led_thread = threading.Thread(target=blink_leds)
+	
+	try:
+		while True:
+			try:
+				input_response = input_queue.get(timeout=1)
+				print("Received Input: ", input_response)
 
 
+			except queue.Empty:
+				pass
 
-try:
-	while True:
-		try:
-			input_response = input_queue.get(timeout=1)
-			print("Received Input: ", input_response)
-
-
-		except queue.Empty:
-			pass
-
-except KeyboardInterrupt:
-	GPIO.cleanup()
+	except KeyboardInterrupt:
+		GPIO.cleanup()
 
 
