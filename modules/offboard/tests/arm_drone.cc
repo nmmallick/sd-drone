@@ -1,9 +1,11 @@
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/action/action.h>
-#include <mavsdk/plugins/offboard/action.h>
+#include <mavsdk/plugins/offboard/offboard.h>
 #include <mavsdk/plugins/telemetry/telemetry.h>
 
 #include <chrono>
+#include <iostream>
+#include <thread>
 
 int main(int argc, char **argv)
 {
@@ -26,9 +28,9 @@ int main(int argc, char **argv)
 	throw std::runtime_error("Timed out waiting for system.");
 
     // Instantiate plugins
-    auto action = Action{system.value()};
-    auto offboard = Offboard{system.value()};
-    auto telemetry = Telemetry{system.value()};
+    auto action = mavsdk::Action{system.value()};
+    auto offboard = mavsdk::Offboard{system.value()};
+    auto telemetry = mavsdk::Telemetry{system.value()};
 
     while (!telemetry.health_all_ok())
     {
@@ -38,13 +40,13 @@ int main(int argc, char **argv)
     std::cout << "System is ready.\n";
 
     const auto arm_result = action.arm();
-    if (arm_result != Action::Result::Success)
+    if (arm_result != mavsdk::Action::Result::Success)
     {
 	ss << "Arming failed: " << arm_result << "\n";
 	throw std::runtime_error(ss.str());
     }
 
-    std::cout << "Armed successful! Looping..." << std::endl;
+    std::cout << "Armed successfully! Looping..." << std::endl;
     while (1);
 
     return 0;
