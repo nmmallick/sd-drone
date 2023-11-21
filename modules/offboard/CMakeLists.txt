@@ -9,17 +9,6 @@ option(BUILD_TESTS "Build tests enabled" OFF)
 find_package(MAVSDK REQUIRED)
 find_package(Threads REQUIRED)
 
-if (BUILD_TESTS)
-
-  add_executable(arm_drone tests/arm_drone.cc)
-
-  target_include_directories(arm_drone PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-
-  target_link_libraries(arm_drone MAVSDK::mavsdk Threads::Threads)
-endif()
-
 set(SOURCES
   src/System.cc
   src/Socket.cc
@@ -28,15 +17,30 @@ set(SOURCES
   src/NetworkInterface.cc
   )
 
-add_executable(offboard src/Main.cc ${SOURCES})
-
-target_include_directories(offboard PRIVATE
+add_library(offboard ${SOURCES})
+target_include_directories(offboard PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  )
-
+  $<INSTALL_INTERFACE:include>)
 target_link_libraries(offboard MAVSDK::mavsdk Threads::Threads)
 
+if (BUILD_TESTS)
+  add_executable(arm_drone tests/arm_drone.cc)
+  target_link_libraries(arm_drone offboard Threads::Threads)
+
+  add_executable(takeoff_land tests/takeoff_land.cc)
+  target_link_libraries(takeoff_land offboard Threads::Threads)
+endif()
+
+
+
+add_executable(main src/Main.cc)
+
+# target_include_directories(offboard PRIVATE
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>
+#   )
+
+target_link_libraries(main offboard)
 install(TARGETS offboard
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
