@@ -24,6 +24,8 @@ set(SOURCES
   src/System.cc
   src/Socket.cc
   src/Utillities.cc
+  src/DroneInterface.cc
+  src/NetworkInterface.cc
   )
 
 add_executable(offboard src/Main.cc ${SOURCES})

@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     auto sys_interface = offboard::System(conf);
 
     sys_ptr_ = &sys_interface;
-    sys_interface.start_offboard();
+    sys_interface.run();
 
     return 0;
 }
