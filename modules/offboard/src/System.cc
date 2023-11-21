@@ -29,11 +29,6 @@ namespace offboard
 					       data.pitch = data.pitch*(180./M_PI);
 					       data.yaw = data.yaw*(180./M_PI);
 
-					       // std::cout << " [T:" << data.thrust << ", "
-					       // 		 << "R:" << data.roll << ", "
-					       // 		 << "P:" << data.pitch << ", "
-					       // 		 << "Y:" << data.yaw << "]" << std::endl;
-
 					       drone_interface->setControls(data);
 					   });
 

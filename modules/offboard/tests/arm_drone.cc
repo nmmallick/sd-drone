@@ -1,4 +1,4 @@
-#include <mavsdk/mavsdk.h>
+ #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/action/action.h>
 #include <mavsdk/plugins/offboard/offboard.h>
 #include <mavsdk/plugins/telemetry/telemetry.h>
@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     using std::this_thread::sleep_for;
 
     mavsdk::Mavsdk mavsdk;
-    mavsdk::ConnectionResult connection_result = mavsdk.add_any_connection("udp://192.168.0.4:14540");
+    mavsdk::ConnectionResult connection_result = mavsdk.add_any_connection("udp://:14540");
 
     std::stringstream ss;
     if (connection_result != mavsdk::ConnectionResult::Success)
@@ -29,15 +29,6 @@ int main(int argc, char **argv)
 
     // Instantiate plugins
     auto action = mavsdk::Action{system.value()};
-    auto offboard = mavsdk::Offboard{system.value()};
-    auto telemetry = mavsdk::Telemetry{system.value()};
-
-    while (!telemetry.health_all_ok())
-    {
-	std::cout << "Waiting for system to be ready.\n";
-	sleep_for(seconds(1));
-    }
-    std::cout << "System is ready.\n";
 
     const auto arm_result = action.arm();
     if (arm_result != mavsdk::Action::Result::Success)
