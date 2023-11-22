@@ -6,6 +6,8 @@
 int main(int argc, char **argv)
 {
     auto drone = offboard::DroneInterface();
+    drone.setRequireRC(false);
+
     drone.connect("udp://:14540");
 
     // Arm and takeoff

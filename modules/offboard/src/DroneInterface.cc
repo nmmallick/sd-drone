@@ -5,24 +5,9 @@
 
 namespace offboard
 {
-    std::string statusToString(const DroneStatus &status)
-    {
-	switch(status)
-	{
-	case DroneStatus::BAD_HEALTH:
-	    return "Bad Health";
-	case DroneStatus::NO_RC:
-	    return "No RC";
-	case DroneStatus::GOOD:
-	    return "Good";
-	default:
-	    break;
-	}
-	return "Unknown";
-    }
-
     DroneInterface::DroneInterface() :
-	mavsdk(std::make_unique<mavsdk::Mavsdk>())
+	mavsdk(std::make_unique<mavsdk::Mavsdk>()),
+	need_rc(true)
     {
     }
 
@@ -53,7 +38,10 @@ namespace offboard
 	using namespace mavsdk;
 
 	if (!isReady())
+	{
+	    std::cerr << "Drone is not ready.\n";
 	    return false;
+	}
 
 	// Armed?
 	const auto arm_result = action->arm();
@@ -96,6 +84,14 @@ namespace offboard
     bool DroneInterface::stop()
     {
 	using namespace mavsdk;
+
+	// Start
+	Offboard::Result offboard_result = offboard->stop();
+	if (offboard_result != Offboard::Result::Success)
+	{
+	    std::cerr << "could not stop offboard control\n";
+	    // kill drone??
+	}
 
 	// Stop the thread
 	done = true;
@@ -172,16 +168,48 @@ namespace offboard
 
     bool DroneInterface::isReady() const
     {
-	const auto rc_status = telemetry->rc_status();
-	if (!rc_status.is_available)
+	if (need_rc)
 	{
-	    std::cerr << "RC is not available\n";
-	    return false;
+	    const auto rc_status = telemetry->rc_status();
+	    if (!rc_status.is_available)
+	    {
+		std::cerr << "RC is not available\n";
+		return false;
+	    }
 	}
 
 	// Check everything is ok before we start
+	std::cout << "Waiting for drone health." << std::endl;
+	while (!telemetry->health_all_ok())
+	{
+	    std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
 	if (!telemetry->health_all_ok())
 	{
+	    const auto health = telemetry->health();
+
+	    if (!health.is_gyrometer_calibration_ok)
+		std::cerr << "gyrometer not calibrated" << std::endl;
+
+	    if (!health.is_accelerometer_calibration_ok)
+		std::cerr << "acceleromter not calibrated" << std::endl;
+
+	    if (!health.is_magnetometer_calibration_ok)
+		std::cerr << "magnetometer cnot calibrated" << std::endl;
+
+	    if (!health.is_local_position_ok)
+		std::cerr << "local position not ok" << std::endl;
+
+	    if (!health.is_global_position_ok)
+		std::cerr << "global position not ok" << std::endl;
+
+	    if (!health.is_home_position_ok)
+		std::cerr << "home position not ok" << std::endl;
+
+	    if (!health.is_armable)
+		std::cerr << "drone not armable" << std::endl;
+
 	    return false;
 	}
 
@@ -191,5 +219,10 @@ namespace offboard
     bool DroneInterface::isRunning() const
     {
 	return !(done.load());
+    }
+
+    void DroneInterface::setRequireRC(const bool &val)
+    {
+	need_rc = val;
     }
 }

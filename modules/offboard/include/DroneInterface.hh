@@ -25,15 +25,6 @@ namespace offboard
 	}
     } attitude;
 
-    enum class DroneStatus
-    {
-	BAD_HEALTH,
-	NO_RC,
-	GOOD
-    };
-
-    std::string statusToString(const DroneStatus &status);
-
     /**
      * @brief Drone interface class
      */
@@ -71,6 +62,8 @@ namespace offboard
 	void setControls(const attitude &attitude);
 	void holdPosition(const bool &hold);
 
+	void setRequireRC(const bool &val);
+
     private:
 	// Interface to PX4 FCU
 	std::unique_ptr<mavsdk::Mavsdk> mavsdk = nullptr;
@@ -88,5 +81,7 @@ namespace offboard
 	Flag done;
 
 	Worker thread;
+
+	bool need_rc;
     };
 }

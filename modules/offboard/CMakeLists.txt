@@ -31,14 +31,7 @@ if (BUILD_TESTS)
   target_link_libraries(takeoff_land offboard Threads::Threads)
 endif()
 
-
-
 add_executable(main src/Main.cc)
-
-# target_include_directories(offboard PRIVATE
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>
-#   )
 
 target_link_libraries(main offboard)
 install(TARGETS offboard
