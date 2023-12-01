@@ -15,6 +15,8 @@ typedef struct IMU_TypeDef
 
     f32 q[4];
 
+    f32 euler[3];
+
     I2C_HandleTypeDef *i2c;
     UART_HandleTypeDef *huart;
 } IMU_TypeDef;
@@ -76,9 +78,23 @@ typedef enum
 #define QUAT_REG_Z_LSB 0x26
 #define QUAT_REG_Z_MSB 0x27
 
+#define EUL_REG_X_LSB 0x1a
+#define EUL_REG_X_MSB 0x1b
+#define EUL_REG_Y_LSB 0x1c
+#define EUL_REG_Y_MSB 0x1d
+#define EUL_REG_Z_LSB 0x1e
+#define EUL_REG_Z_MSB 0x1f
+
 #define BNO_055_I2C_ADDR 0x28
 #define BNO_055_CHIP_ID 0xa0
 #define BNO_055_CHIP_ID_ADDR 0x00
+
+#define AXIS_MAP_CONFIG 0x41
+#define AXIS_MAP_SIGN 0x42
+
+#define X_AXIS 0x00
+#define Y_AXIS 0x01
+#define Z_AXIS 0x02
 
 // Conversion for gyroscope
 #define LSB_TO_DPS 16.0
@@ -90,6 +106,10 @@ typedef enum
 
 // Conversions for magnometer
 #define LSB_TO_MICRO_T 16.0
+
+// Conversion for euler angles [RADIANS]
+#define LSB_TO_DEG 1/16.0
+#define LSB_TO_RAD 1/900.0
 
 // Conversion for quaternions
 #define LSB_TO_QUAT 1.0/(1 << 14)
@@ -103,8 +123,15 @@ void read_gyro(IMU_TypeDef *imu_dtype);
 void read_acc(IMU_TypeDef *imu_dtype);
 void read_mag(IMU_TypeDef *imu_dtype);
 void read_quat(IMU_TypeDef *imu_dtype);
+void read_euler(IMU_TypeDef *imu_dtype);
 
 void read_imu(IMU_TypeDef *imu_dtype);
 
 float convert(uint8_t *, float);
+
+// Helpers
+void set_mode(uint8_t mode);
+uint8_t read_reg(uint8_t reg_addr);
+HAL_StatusTypeDef write_byte(uint8_t reg_addr, uint8_t data);
+
 #endif
