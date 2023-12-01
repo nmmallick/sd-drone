@@ -1,6 +1,8 @@
 #include <iostream>
 #include <future>
 
+#include <math.h>
+
 #include <DroneInterface.hh>
 
 namespace offboard
@@ -78,7 +80,7 @@ namespace offboard
 	    return false;
 	}
 
-	return startLoop();
+	return true;
     }
 
     bool DroneInterface::stop()
@@ -141,7 +143,6 @@ namespace offboard
 				     }
 				     else
 				     {
-					 Lock lk(control_mutex);
 					 offboard->set_velocity_body(controls);
 				     }
 				 }
@@ -154,9 +155,29 @@ namespace offboard
     {
 	Lock lk(control_mutex);
 
-	controls.right_m_s = (input.roll)*0.1;
-	controls.forward_m_s = (input.pitch)*0.1;
-	controls.yawspeed_deg_s = (input.yaw)*0.2;
+	// 5.0 degrees is the threshold in which we want to actually
+	// starting caring about head position. This is so any little
+	// movement won't contribute to any unwanted drifting
+	if (std::abs(input.roll) > 5.0)
+	    controls.right_m_s = (input.roll)*0.1;
+	else
+	    controls.right_m_s = 0.0;
+
+	if (std::abs(input.pitch) > 5.0)
+	    controls.forward_m_s = (input.pitch)*0.1;
+	else
+	    controls.forward_m_s = 0.0;
+
+	if (std::abs(input.yaw) > 5.0)
+	{
+	    // Since we are squaring the input yaw values, we want to
+	    // retain the sign for direction
+	    auto sign = input.yaw >= 0 ? 1 : -1;
+	    controls.yawspeed_deg_s = sign*pow(input.yaw, 2)*0.05;
+	} else
+	{
+	    controls.yawspeed_deg_s = 0.0;
+	}
 
 	controls.down_m_s = -input.thrust;
     }
