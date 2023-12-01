@@ -49,7 +49,6 @@ namespace offboard
 	    std::cerr << "could not start offboard" << std::endl;
 	    return false;
 	}
-	std::cout << "finished startup" << std::endl;
 
 	if (!network_interface->isConnected())
 	    drone_interface->holdPosition(true);
