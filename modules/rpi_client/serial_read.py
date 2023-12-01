@@ -44,7 +44,7 @@ class DeviceInterface:
             self.angles.quaternion2euler(self.quaternion)
 
     def getAngles(self):
-        return [-self.angles.pitch, self.angles.roll, self.angles.yaw]
+        return [-self.angles.pitch if self.angles.pitch != None else self.angles.pitch, self.angles.roll, self.angles.yaw]
 
     def reset_stm(self):
         subprocess.run(["st-flash", "reset"])
