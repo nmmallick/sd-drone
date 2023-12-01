@@ -33,7 +33,7 @@ if __name__ == '__main__':
     head_device.start()
 
     # interface to handheld gyro
-    I2c = board.I2C()
+    i2c = board.I2C()
     hand_device = adafruit_bno055.BNO055_I2C(i2c)
 
     x,y,z,x_sign,y_sign,z_sign = hand_device.axis_remap
