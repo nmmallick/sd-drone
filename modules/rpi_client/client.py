@@ -2,11 +2,11 @@ import socket
 import copy
 import struct
 import time
-# import board
-# import adafruit_bno055
+import board
+import adafruit_bno055
 import subprocess
 
-#from button import ToggleButton
+from button import ToggleButton
 from serial_read import DeviceInterface
 
 class UDPSocket:
