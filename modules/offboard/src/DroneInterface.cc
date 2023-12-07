@@ -9,7 +9,7 @@ namespace offboard
 {
     DroneInterface::DroneInterface() :
 	mavsdk(std::make_unique<mavsdk::Mavsdk>()),
-	need_rc(true)
+	need_rc(false)
     {
     }
 
